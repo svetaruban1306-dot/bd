@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інтерактивний Квест: Експерт Баз Даних (LibreOffice Base)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --panel-border: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --neon-green: #00ff66;
+            --neon-blue: #00e5ff;
+            --neon-purple: #b388ff;
+            --neon-red: #ff5252;
+            --font-code: 'Fira Code', monospace;
+            --font-sans: 'Inter', system-ui, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(179, 136, 255, 0.05) 0%, transparent 20%);
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--panel-border);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .subtitle {
+            color: var(--neon-blue);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .problem-card {
+            background: rgba(22, 27, 34, 0.9);
+            border: 1px solid var(--neon-purple);
+            box-shadow: 0 0 15px rgba(179, 136, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .problem-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--neon-purple);
+        }
+
+        .problem-card h2 {
+            color: var(--neon-purple);
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-tracker {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .step-node {
+            flex: 1;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .step-node.active {
+            color: var(--neon-green);
+            text-shadow: 0 0 8px var(--neon-green);
+        }
+
+        .step-node.completed {
+            color: var(--neon-blue);
+        }
+
+        .stage-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .stage-card.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stage-title {
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+        }
+
+        .theory-box {
+            background: #090d13;
+            border-left: 4px solid var(--neon-blue);
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 25px;
+        }
+
+        .theory-box h3 {
+            color: var(--neon-blue);
+            margin-bottom: 10px;
+        }
+
+        .quiz-section {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px dashed var(--panel-border);
+            margin-bottom: 25px;
+        }
+
+        .quiz-option {
+            display: block;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 12px 18px;
+            border-radius: 6px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-main);
+        }
+
+        .quiz-option:hover {
+            border-color: var(--neon-blue);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .simulator-container {
+            background: #05080c;
+            border: 1px solid var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .sim-title {
+            color: var(--neon-green);
+            font-family: var(--font-code);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-instruction {
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .base-gui {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 15px;
+            background: #1e242c;
+            border-radius: 6px;
+            padding: 10px;
+            min-height: 250px;
+        }
+
+        .base-sidebar {
+            background: #161b22;
+            padding: 10px;
+            border-right: 1px solid var(--panel-border);
+        }
+
+        .base-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-main);
+            text-align: left;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .base-btn:hover {
+            background: rgba(0, 229, 255, 0.1);
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+        }
+
+        .base-content {
+            background: #0d1117;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            margin: 10px 0;
+        }
+
+        .db-table th, .db-table td {
+            border: 1px solid var(--panel-border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .db-table th {
+            background: #1f242d;
+            color: var(--neon-blue);
+        }
+
+        .db-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--neon-green), #00cc52);
+            color: #000;
+            font-weight: 700;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-sans);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            box-shadow: 0 0 15px var(--neon-green);
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            background: transparent;
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 82, 82, 0.1);
+        }
+
+        select, input {
+            background: #161b22;
+            border: 1px solid var(--panel-border);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: var(--font-sans);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .feedback.success {
+            background: rgba(0, 255, 102, 0.1);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            display: block;
+        }
+
+        .feedback.error {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+            display: block;
+        }
+
+        #cert-screen {
+            text-align: center;
+            padding: 40px;
+            background: radial-gradient(circle, #1a2332 0%, #0d1117 100%);
+            border: 2px solid var(--neon-green);
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.2);
+            display: none;
+        }
+
+        #cert-screen.active {
+            display: block;
+        }
+
+        .cert-border {
+            border: 2px dashed var(--neon-blue);
+            padding: 30px;
+            border-radius: 8px;
+        }
+
+        canvas#confetti {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+
+    <header>
+        <h1>📚 Квест: Архітектор Баз Даних</h1>
+        <div class="subtitle">Освоєння LibreOffice Base & Реляційних БД (9 клас)</div>
+    </header>
+
+    <div class="problem-card">
+        <h2>⚠️ Ситуація в Ліцеї №45</h2>
+        <p>Учні 9-А класу створили файли з даними про успішність, контакти та шкільне майно. Через відсутність систематизації виникло <strong>«інформаційне сміття»</strong>. Завуч не може сформувати підсумковий звіт!</p>
+        <p style="margin-top: 10px;"><strong>Ваша місія:</strong> Пройти 4 етапи налаштування системи керування базами даних (СКБД) <strong>LibreOffice Base</strong>, вирішити теоретичні підказки-ключі та систематизувати дані!</p>
+    </div>
+
+    <div class="progress-tracker">
+        <div class="step-node active" id="node-1">1. Основи СКБД 📁</div>
+        <div class="step-node" id="node-2">2. Реляційна модель 📊</div>
+        <div class="step-node" id="node-3">3. Фільтри й Сортування 🔍</div>
+        <div class="step-node" id="node-4">4. Конструктор Запитів ⚡</div>
+    </div>
+
+    <!-- STAGE 1 -->
+    <div class="stage-card active" id="stage-1">
+        <div class="stage-header">
+            <div class="stage-title">Етап 1: Ознайомлення з LibreOffice Base</div>
+            <button class="btn-reset" onclick="resetProgress()">🔄 Скинути прогрес</button>
+        </div>
+
+        <div class="theory-box">
+            <h3>📖 Теоретична довідка (Параграф 6.1)</h3>
+            <p><strong>База даних (БД)</strong> — це впорядкований за певними правилами набір взаємопов'язаних даних. Для роботи з ними використовують <strong>LibreOffice Base</strong> (основний формат <code>.odb</code>).</p>
+            <p style="margin-top: 8px;">Основні об'єкти в базах даних Base:</p>
+            <ul>
+                <li><strong>Таблиці</strong> — зберігання даних.</li>
+                <li><strong>Форми</strong> — зручне введення та перегляд даних.</li>
+                <li><strong>Запити</strong> — вибірка даних за умовами.</li>
+                <li><strong>Звіти</strong> — узагальнення та друк.</li>
+            </ul>
+        </div>
+
+        <div class="quiz-section">
+            <p><strong>Ключ-завдання:</strong> Який об'єкт БД LibreOffice Base призначений для <i>зручного введення та перегляду відомостей про осіб</i>?</p>
+            <label class="quiz-option"><input type="radio" name="q1" value="table"> Таблиці</label>
+            <label class="quiz-option"><input type="radio" name="q1" value="form"> Форми</label>
+            <label class="quiz-option"><input type="radio" name="q1" value="query"> Запити</label>
+            <label class="quiz-option"><input type="radio" name="q1" value="report"> Звіти</label>
+            <button class="btn" style="margin-top: 15px;" onclick="checkQ1()">Перевірити теорію 🔑</button>
+            <div id="q1-feedback" class="feedback"></div>
+        </div>
+
+        <div id="sim-1" class="simulator-container" style="display: none;">
+            <div class="sim-title">💻 Симулятор LibreOffice Base: Дослідження об'єктів БД "Контакти.odb"</div>
+            <div class="task-instruction">📌 Натисніть на об'єкт <strong>«Форми»</strong> у лівому меню, щоб відкрити картку учня.</div>
+            
+            <div class="base-gui">
+                <div class="base-sidebar">
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">База даних</div>
+                    <button class="base-btn" onclick="sim1Select('table')">📊 Таблиці</button>
+                    <button class="base-btn" onclick="sim1Select('query')">🔎 Запити</button>
+                    <button class="base-btn" onclick="sim1Select('form')">📑 Форми</button>
+                    <button class="base-btn" onclick="sim1Select('report')">🖨️ Звіти</button>
+                </div>
+                <div class="base-content" id="sim1-content">
+                    <i>Оберіть тип об'єкта на панелі ліворуч...</i>
+                </div>
+            </div>
+            <div id="sim1-feedback" class="feedback"></div>
+        </div>
+    </div>
+
+    <!-- STAGE 2 -->
+    <div class="stage-card" id="stage-2">
+        <div class="stage-header">
+            <div class="stage-title">Етап 2: Реляційна структура та Ключові поля</div>
+        </div>
+
+        <div class="theory-box">
+            <h3>📖 Теоретична довідка (Параграф 6.2)</h3>
+            <p>У реляційній БД:</p>
+            <ul>
+                <li>Рядок таблиці — це <strong>запис</strong> (один об'єкт).</li>
+                <li>Стовпець — це <strong>поле</strong> (має ім'я та тип даних: Текст, Число, Дата, Грошовий).</li>
+                <li><strong>Ключове поле (ключ)</strong> — поле з унікальними значеннями для кожного запису.</li>
+            </ul>
+        </div>
+
+        <div class="quiz-section">
+            <p><strong>Ключ-завдання:</strong> Яке поле доцільно обрати як <strong>ключове</strong> в таблиці «Монітори», якщо назви моделей та ціни можуть повторюватися?</p>
+            <label class="quiz-option"><input type="radio" name="q2" value="vendor"> Виробник</label>
+            <label class="quiz-option"><input type="radio" name="q2" value="price"> Ціна</label>
+            <label class="quiz-option"><input type="radio" name="q2" value="id"> Порядковий номер (ID)</label>
+            <button class="btn" style="margin-top: 15px;" onclick="checkQ2()">Перевірити теорію 🔑</button>
+            <div id="q2-feedback" class="feedback"></div>
+        </div>
+
+        <div id="sim-2" class="simulator-container" style="display: none;">
+            <div class="sim-title">🛠️ Редактор Таблиці: Визначення типів полів</div>
+            <div class="task-instruction">📌 Вкажіть правильні типи даних для кожного поля та зробіть <strong>ID_Товару</strong> ключовим полем:</div>
+
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th>Назва поля</th>
+                        <th>Тип даних</th>
+                        <th>Ключове поле?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ID_Товару</td>
+                        <td><select id="t1"><option>Текст</option><option value="int">Ціле число</option><option>Дата</option></select></td>
+                        <td><input type="radio" name="primary_key" value="id"> Ключ</td>
+                    </tr>
+                    <tr>
+                        <td>Назва_Товару</td>
+                        <td><select id="t2"><option value="text">Текст</option><option>Грошовий</option><option>Число</option></select></td>
+                        <td><input type="radio" name="primary_key" value="name"> Ключ</td>
+                    </tr>
+                    <tr>
+                        <td>Дата_Отримання</td>
+                        <td><select id="t3"><option>Текст</option><option value="date">Дата</option><option>Число</option></select></td>
+                        <td><input type="radio" name="primary_key" value="date"> Ключ</td>
+                    </tr>
+                    <tr>
+                        <td>Ціна</td>
+                        <td><select id="t4"><option>Текст</option><option value="money">Грошовий</option><option>Дата</option></select></td>
+                        <td><input type="radio" name="primary_key" value="price"> Ключ</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn" onclick="validateSim2()">Зберегти структуру таблиці 💾</button>
+            <div id="sim2-feedback" class="feedback"></div>
+        </div>
+    </div>
+
+    <!-- STAGE 3 -->
+    <div class="stage-card" id="stage-3">
+        <div class="stage-header">
+            <div class="stage-title">Етап 3: Сортування та Фільтрування даних</div>
+        </div>
+
+        <div class="theory-box">
+            <h3>📖 Теоретична довідка (Завдання підручника)</h3>
+            <p>Для відбору даних використовують:</p>
+            <ul>
+                <li><strong>Сортування:</strong> Упорядкування записів за зростанням або спаданням.</li>
+                <li><strong>Типовий (Стандартний) фільтр:</strong> Відбір за кількома умовами (оператори <strong>І</strong> / <strong>АБО</strong>).</li>
+            </ul>
+        </div>
+
+        <div class="quiz-section">
+            <p><strong>Ключ-завдання:</strong> Якщо потрібно відбрати учнів з оцінкою з Інформатики <strong>>= 10</strong> <u>І</u> з класу <strong>9-А</strong>, який інструмент використати?</p>
+            <label class="quiz-option"><input type="radio" name="q3" value="sort"> Сортування за зростанням</label>
+            <label class="quiz-option"><input type="radio" name="q3" value="std_filter"> Типовий (Стандартний) фільтр</label>
+            <label class="quiz-option"><input type="radio" name="q3" value="clear"> Очистити фільтр</label>
+            <button class="btn" style="margin-top: 15px;" onclick="checkQ3()">Перевірити теорію 🔑</button>
+            <div id="q3-feedback" class="feedback"></div>
+        </div>
+
+        <div id="sim-3" class="simulator-container" style="display: none;">
+            <div class="sim-title">📊 Таблиця «Підсумкові оцінки»: Операції над даними</div>
+            
+            <div class="task-instruction">
+                📌 <strong>Завдання:</strong><br>
+                1. Натисніть кнопку <strong>«Типовий Фільтр 🔍»</strong>.<br>
+                2. Оберіть умову <strong>`>=`</strong> та значення <strong>`10`</strong>, після чого натисніть <strong>«Застосувати»</strong>.
+            </div>
+
+            <div style="margin-bottom: 15px; display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn" style="padding:6px 12px; font-size:0.85rem;" onclick="sortScoresDesc()">Сортувати за балом (За спаданням) ⬇️</button>
+                <button class="btn" style="padding:6px 12px; font-size:0.85rem; background:var(--neon-blue);" onclick="openFilterModal()">Типовий Фільтр 🔍</button>
+                <button class="btn-reset" onclick="resetTable3()">Очистити фільтр/сорт</button>
+            </div>
+
+            <div id="filter-panel" style="display:none; background:#161b22; padding:15px; border-radius:6px; margin-bottom:15px; border:1px solid var(--neon-blue);">
+                <div style="color:var(--neon-blue); font-weight:bold; margin-bottom:8px;">Налаштування Стандартного Фільтра:</div>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <span>Інформатика</span>
+                    <select id="f-op"><option value=">=">>=</option><option value="=">=</option></select>
+                    <input type="number" id="f-val" value="10" style="width:70px;">
+                    <button class="btn" style="padding:6px 14px;" onclick="applyFilter3()">Застосувати</button>
+                </div>
+            </div>
+
+            <table class="db-table" id="score-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Прізвище</th>
+                        <th>Ім'я</th>
+                        <th>Клас</th>
+                        <th>Інформатика</th>
+                    </tr>
+                </thead>
+                <tbody id="score-tbody"></tbody>
+            </table>
+            <div id="sim3-status" style="font-size:0.85rem; color:var(--text-muted); margin-top:5px;">Записів у таблиці: 6</div>
+            
+            <div id="sim3-feedback" class="feedback"></div>
+
+            <!-- Додаткова гарантована кнопка переходу -->
+            <div id="stage3-next-container" style="margin-top:20px; text-align:right;">
+                <button class="btn" id="btn-next-3" onclick="advanceStage()">Перейти до Етапу 4 ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAGE 4 -->
+    <div class="stage-card" id="stage-4">
+        <div class="stage-header">
+            <div class="stage-title">Етап 4: Автоматизоване створення Запитів</div>
+        </div>
+
+        <div class="theory-box">
+            <h3>📖 Теоретична довідка (Практична робота №8)</h3>
+            <p><strong>Запит</strong> — це програма вибірки потрібних даних мовою SQL. У таблиці Конструктора вказують:</p>
+            <ul>
+                <li><strong>Поле / Таблиця:</strong> джерела даних.</li>
+                <li><strong>Критерій:</strong> умова вибірки.</li>
+            </ul>
+        </div>
+
+        <div class="quiz-section">
+            <p><strong>Ключ-завдання:</strong> Де в Конструкторі записують умови для різних полів, якщо вони мають виконуватися одночасно (операція І)?</p>
+            <label class="quiz-option"><input type="radio" name="q4" value="same_row"> В одному рядку «Критерій» для різних полів</label>
+            <label class="quiz-option"><input type="radio" name="q4" value="diff_row"> У різних рядках «Або»</label>
+            <button class="btn" style="margin-top: 15px;" onclick="checkQ4()">Перевірити теорію 🔑</button>
+            <div id="q4-feedback" class="feedback"></div>
+        </div>
+
+        <div id="sim-4" class="simulator-container" style="display: none;">
+            <div class="sim-title">⚡ Конструктор Запитів: Вибірка "Ноутбуки"</div>
+            <div class="task-instruction">📌 Сформуйте запит: оберіть <strong>дорівнює 'Ноутбук'</strong> ТА <strong>більше '01.11.2025'</strong>.</div>
+
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th>Рядок Конструктора</th>
+                        <th>Поле 1: Тип товару</th>
+                        <th>Поле 2: Дата отримання</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Видиме</strong></td>
+                        <td><input type="checkbox" checked disabled></td>
+                        <td><input type="checkbox" checked disabled></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Критерій (Умова)</strong></td>
+                        <td>
+                            <select id="q-type">
+                                <option value="all">-- Всі --</option>
+                                <option value="laptop">дорівнює 'Ноутбук'</option>
+                                <option value="monitor">дорівнює 'Монітор'</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select id="q-date">
+                                <option value="all">-- Всі дати --</option>
+                                <option value="after">більше '01.11.2025'</option>
+                                <option value="before">менше '01.11.2025'</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn" style="margin-top:15px;" onclick="runQuerySim()">Запустити Запит ▶️</button>
+            
+            <div id="query-result" style="margin-top:15px; display:none;">
+                <div style="color:var(--neon-green); font-weight:bold; margin-bottom:5px;">Результат виконання запиту:</div>
+                <table class="db-table">
+                    <thead>
+                        <tr>
+                            <th>Номер накладної</th>
+                            <th>Дата отримання</th>
+                            <th>Тип товару</th>
+                            <th>Назва товару</th>
+                            <th>Кількість</th>
+                        </tr>
+                    </thead>
+                    <tbody id="query-tbody"></tbody>
+                </table>
+            </div>
+            <div id="sim4-feedback" class="feedback"></div>
+        </div>
+    </div>
+
+    <!-- FINAL SCREEN -->
+    <div id="cert-screen">
+        <div class="cert-border">
+            <h1 style="color:var(--neon-green);">🎓 СЕРТИФІКАТ ЕКСПЕРТА БД</h1>
+            <p style="font-size: 1.2rem; margin: 15px 0;">Вітаємо! Учень/учениця успішно пройшов(ла) практичний квест з опису, проєктування, сортування та створення запитів у СКБД <strong>LibreOffice Base</strong>!</p>
+            <div style="font-family:var(--font-code); color:var(--neon-blue); font-size:1.1rem; margin-bottom:20px;">
+                Дані Ліцею №45 успішно систематизовано!
+            </div>
+            <button class="btn" onclick="resetProgress()">Пройти квест знову 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(110, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        let currentStage = 1;
+        const initialStudents = [
+            { id: 1, surname: "Давиденко", name: "Петро", class: "9-А", score: 11 },
+            { id: 2, surname: "Шевченко", name: "Олена", class: "9-А", score: 9 },
+            { id: 3, surname: "Коваленко", name: "Юлія", class: "9-Б", score: 12 },
+            { id: 4, surname: "Бондаренко", name: "Максим", class: "9-А", score: 7 },
+            { id: 5, surname: "Ткаченко", name: "Юлія", class: "9-А", score: 10 },
+            { id: 6, surname: "Кравченко", name: "Артем", class: "9-Б", score: 8 }
+        ];
+        let currentStudents = [...initialStudents];
+
+        const initialGoods = [
+            { invoice: 123, date: "11.10.2025", type: "Монітор", name: "LCD 19''", qty: 6 },
+            { invoice: 124, date: "21.10.2025", type: "Ноутбук", name: "Lenovo", qty: 10 },
+            { invoice: 125, date: "23.11.2025", type: "Комп'ютер", name: "Настільний", qty: 15 },
+            { invoice: 126, date: "27.11.2025", type: "Ноутбук", name: "Asus Pro", qty: 5 },
+            { invoice: 127, date: "05.12.2025", type: "Ноутбук", name: "HP Pavilion", qty: 12 }
+        ];
+
+        window.onload = () => {
+            const savedStage = localStorage.getItem('db_quest_stage');
+            if (savedStage) {
+                currentStage = parseInt(savedStage);
+            }
+            updateStageDisplay();
+            renderTable3();
+        };
+
+        function updateStageDisplay() {
+            for (let i = 1; i <= 4; i++) {
+                const node = document.getElementById(`node-${i}`);
+                const stageCard = document.getElementById(`stage-${i}`);
+                if (i < currentStage) {
+                    node.className = "step-node completed";
+                    stageCard.classList.remove('active');
+                } else if (i === currentStage) {
+                    node.className = "step-node active";
+                    stageCard.classList.add('active');
+                } else {
+                    node.className = "step-node";
+                    stageCard.classList.remove('active');
+                }
+            }
+            if (currentStage > 4) {
+                document.querySelectorAll('.stage-card').forEach(el => el.classList.remove('active'));
+                document.getElementById('cert-screen').classList.add('active');
+                triggerConfetti();
+            }
+        }
+
+        function advanceStage() {
+            currentStage++;
+            localStorage.setItem('db_quest_stage', currentStage);
+            updateStageDisplay();
+        }
+
+        function resetProgress() {
+            localStorage.removeItem('db_quest_stage');
+            currentStage = 1;
+            location.reload();
+        }
+
+        function checkQ1() {
+            const val = document.querySelector('input[name="q1"]:checked')?.value;
+            const fb = document.getElementById('q1-feedback');
+            if (val === 'form') {
+                fb.className = "feedback success";
+                fb.innerText = "Правильно! Відкрито доступ до симулятора!";
+                playSound('success');
+                document.getElementById('sim-1').style.display = 'block';
+            } else {
+                fb.className = "feedback error";
+                fb.innerText = "Невірно. Зверніть увагу на довідку про об'єкти LibreOffice Base!";
+                playSound('error');
+            }
+        }
+
+        function sim1Select(type) {
+            const content = document.getElementById('sim1-content');
+            const fb = document.getElementById('sim1-feedback');
+            if (type === 'form') {
+                content.innerHTML = `
+                    <div style="border: 1px solid var(--neon-blue); padding:10px; border-radius:4px;">
+                        <strong>Форма: Відомості про контакти</strong><br><br>
+                        Прізвище: Давиденко<br>
+                        Ім'я: Петро<br>
+                        Місце навчання: Ліцей №45, 9-А клас<br>
+                        E-mail: priklad_1@ukr.net
+                    </div>
+                `;
+                fb.className = "feedback success";
+                fb.innerHTML = "Чудово! Етап 1 пройдено! <button class='btn' style='margin-left:10px; padding:4px 8px;' onclick='advanceStage()'>Далі ➔</button>";
+                playSound('success');
+            } else {
+                content.innerHTML = `<div style="color:var(--text-muted);">Обрано інший об'єкт. Оберіть «Форми».</div>`;
+            }
+        }
+
+        function checkQ2() {
+            const val = document.querySelector('input[name="q2"]:checked')?.value;
+            const fb = document.getElementById('q2-feedback');
+            if (val === 'id') {
+                fb.className = "feedback success";
+                fb.innerText = "Правильно! Порядковий номер (ID) є унікальним.";
+                playSound('success');
+                document.getElementById('sim-2').style.display = 'block';
+            } else {
+                fb.className = "feedback error";
+                fb.innerText = "Невірно. Ці значення можуть повторюватися.";
+                playSound('error');
+            }
+        }
+
+        function validateSim2() {
+            const t1 = document.getElementById('t1').value;
+            const t2 = document.getElementById('t2').value;
+            const t3 = document.getElementById('t3').value;
+            const t4 = document.getElementById('t4').value;
+            const pk = document.querySelector('input[name="primary_key"]:checked')?.value;
+            const fb = document.getElementById('sim2-feedback');
+
+            if (t1 === 'int' && t2 === 'text' && t3 === 'date' && t4 === 'money' && pk === 'id') {
+                fb.className = "feedback success";
+                fb.innerHTML = "Вірно! Етап 2 пройдено! <button class='btn' style='margin-left:10px; padding:4px 8px;' onclick='advanceStage()'>Далі ➔</button>";
+                playSound('success');
+            } else {
+                fb.className = "feedback error";
+                fb.innerText = "Перевірте: ID_Товару — Ціле число та Ключ, Ціна — Грошовий.";
+                playSound('error');
+            }
+        }
+
+        function checkQ3() {
+            const val = document.querySelector('input[name="q3"]:checked')?.value;
+            const fb = document.getElementById('q3-feedback');
+            if (val === 'std_filter') {
+                fb.className = "feedback success";
+                fb.innerText = "Вірно! Для складеної умови призначений Типовий фільтр.";
+                playSound('success');
+                document.getElementById('sim-3').style.display = 'block';
+            } else {
+                fb.className = "feedback error";
+                fb.innerText = "Невірно. Сортування лише змінює порядок рядків.";
+                playSound('error');
+            }
+        }
+
+        function renderTable3() {
+            const tbody = document.getElementById('score-tbody');
+            tbody.innerHTML = '';
+            currentStudents.forEach(s => {
+                tbody.innerHTML += `<tr>
+                    <td>${s.id}</td>
+                    <td>${s.surname}</td>
+                    <td>${s.name}</td>
+                    <td>${s.class}</td>
+                    <td><strong>${s.score}</strong></td>
+                </tr>`;
+            });
+            document.getElementById('sim3-status').innerText = `Записів у таблиці: ${currentStudents.length}`;
+        }
+
+        function sortScoresDesc() {
+            currentStudents.sort((a, b) => b.score - a.score);
+            renderTable3();
+            playSound('success');
+        }
+
+        function openFilterModal() {
+            document.getElementById('filter-panel').style.display = 'block';
+        }
+
+        function applyFilter3() {
+            const op = document.getElementById('f-op').value;
+            const val = parseInt(document.getElementById('f-val').value);
+            
+            if (op === '>=') {
+                currentStudents = initialStudents.filter(s => s.score >= val);
+            } else if (op === '=') {
+                currentStudents = initialStudents.filter(s => s.score === val);
+            }
+            renderTable3();
+
+            const fb = document.getElementById('sim3-feedback');
+            fb.className = "feedback success";
+            fb.innerHTML = "Фільтр успішно застосовано! Знайдено учнів з високим балом (>=10). Натисніть кнопку нижче, щоб перейти далі.";
+            playSound('success');
+        }
+
+        function resetTable3() {
+            currentStudents = [...initialStudents];
+            document.getElementById('filter-panel').style.display = 'none';
+            document.getElementById('sim3-feedback').style.display = 'none';
+            renderTable3();
+        }
+
+        function checkQ4() {
+            const val = document.querySelector('input[name="q4"]:checked')?.value;
+            const fb = document.getElementById('q4-feedback');
+            if (val === 'same_row') {
+                fb.className = "feedback success";
+                fb.innerText = "Вірно! В одному рядку «Критерій» умови об'єднуються операцією І.";
+                playSound('success');
+                document.getElementById('sim-4').style.display = 'block';
+            } else {
+                fb.className = "feedback error";
+                fb.innerText = "Невірно. Рядки «Або» використовуються для операції АБО.";
+                playSound('error');
+            }
+        }
+
+        function runQuerySim() {
+            const type = document.getElementById('q-type').value;
+            const date = document.getElementById('q-date').value;
+            const resDiv = document.getElementById('query-result');
+            const tbody = document.getElementById('query-tbody');
+            const fb = document.getElementById('sim4-feedback');
+
+            tbody.innerHTML = '';
+            
+            if (type === 'laptop' && date === 'after') {
+                const res = initialGoods.filter(g => g.type === 'Ноутбук' && g.invoice >= 125);
+                res.forEach(g => {
+                    tbody.innerHTML += `<tr>
+                        <td>${g.invoice}</td>
+                        <td>${g.date}</td>
+                        <td>${g.type}</td>
+                        <td>${g.name}</td>
+                        <td>${g.qty}</td>
+                    </tr>`;
+                });
+                resDiv.style.display = 'block';
+                fb.className = "feedback success";
+                fb.innerHTML = "Запит успішно виконано! <button class='btn' style='margin-left:10px; padding:4px 8px;' onclick='advanceStage()'>Отримати сертифікат 🎓</button>";
+                playSound('success');
+            } else {
+                resDiv.style.display = 'none';
+                fb.className = "feedback error";
+                fb.innerText = "Установіть: Тип товару = 'дорівнює Ноутбук' ТА Дата = 'більше 01.11.2025'.";
+                playSound('error');
+            }
+        }
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#00ff66', '#00e5ff', '#b388ff', '#ffffff'];
+
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 8 + 4,
+                    speed: Math.random() * 3 + 2
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.y += p.speed;
+                    if (p.y > canvas.height) p.y = -10;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>
